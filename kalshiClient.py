@@ -1,40 +1,66 @@
 import requests
 import base64
-import time
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
+from cryptography.exceptions import InvalidSignature
+import datetime
+
 
 class KalshiClient:
-    def __init__(self, key_id, private_key_path, base_url="https://api.elections.kalshi.com/trade-api/v2"):
+    def __init__(
+        self,
+        key_id,
+        private_key_path,
+        base_url="https://api.elections.kalshi.com/trade-api/v2",
+    ):
         self.key_id = key_id
         self.base_url = base_url
         self.session = requests.Session()
 
         with open(private_key_path, "rb") as key_file:
             self.private_key = serialization.load_pem_private_key(
-                key_file.read(),
-                password=None,
-                backend=default_backend()
+                key_file.read(), password=None, backend=default_backend()
             )
 
     def _generate_headers(self, method, path):
-        timestamp = str(int(time.time()))
-        payload = f"{timestamp}.{method.upper()}.{path}".encode("utf-8")
-        signature = self.private_key.sign(payload, padding.PKCS1v15(), hashes.SHA256())
-        signature_b64 = base64.b64encode(signature).decode("utf-8")
+        # Get the current time
+        current_time = datetime.datetime.now()
+        # Convert the time to a timestamp (seconds since the epoch)
+        timestamp = current_time.timestamp()
+        # Convert the timestamp to milliseconds
+        current_time_milliseconds = int(timestamp * 1000)
+        timestampt_str = str(current_time_milliseconds)
+        payload = f"{timestampt_str}.{method.upper()}.{path}".encode("utf-8")
+        try:
+            signature = self.private_key.sign(
+                payload,
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.DIGEST_LENGTH,
+                ),
+                hashes.SHA256(),
+            )
+            signature = base64.b64encode(signature).decode("utf-8")
+        except InvalidSignature as e:
+            raise ValueError("RSA sign PSS failed") from e
 
         return {
-            "Kalshi-Timestamp": timestamp,
-            "Kalshi-Signature": signature_b64,
-            "Kalshi-Key-Id": self.key_id
+            "KALSHI-ACCESS-KEY": self.key_id,
+            "KALSHI-ACCESS-SIGNATURE": signature,
+            "KALSHI-ACCESS-TIMESTAMP": timestampt_str,
         }
 
     def _request(self, method, endpoint, params=None, data=None):
         path = endpoint if endpoint.startswith("/") else "/" + endpoint
         url = f"{self.base_url}{path}"
         headers = self._generate_headers(method, path)
-        response = self.session.request(method=method.upper(), url=url, headers=headers, params=params, json=data)
+        response = self.session.request(
+            method=method.upper(),
+            url=url, headers=headers,
+            params=params,
+            json=data
+        )
         response.raise_for_status()
         return response.json()
 
@@ -114,8 +140,9 @@ class KalshiClient:
         return self._get(f"/series/{series_ticker}")
 
     def get_market_candlesticks(self, series_ticker, market_ticker):
-        return self._get(f"/series/{series_ticker}/markets/{market_ticker}/candlesticks?&start_ts=1745298193&end_ts=1745299194&period_interval=1")
-
+        return self._get(
+            f"/series/{series_ticker}/markets/{market_ticker}/candlesticks?&start_ts=1745298193&end_ts=1745299194&period_interval=1"
+        )
 
     # Exchange
     def get_announcements(self):
