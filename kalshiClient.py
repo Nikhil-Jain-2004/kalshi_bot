@@ -80,11 +80,55 @@ class KalshiClient:
     def get_communications_id(self):
         return self._get("/communications/id")
 
-    def get_quotes(self):
-        return self._get("/communications/quotes")
+    def get_quotes(
+        self,
+        cursor=None,
+        limit=None,
+        market_ticker=None,
+        event_ticker=None,
+        status=None,
+        quote_creator_user_id=None,
+        rfq_creator_user_id=None,
+        rfq_id=None
+    ):
+        params = {}
+        if cursor is not None:
+            params["cursor"] = cursor
+        if limit is not None:
+            params["limit"] = limit
+        if market_ticker is not None:
+            params["market_ticker"] = market_ticker
+        if event_ticker is not None:
+            params["event_ticker"] = event_ticker
+        if status is not None:
+            params["status"] = status
+        if quote_creator_user_id is not None:
+            params["quote_creator_user_id"] = quote_creator_user_id
+        if rfq_creator_user_id is not None:
+            params["rfq_creator_user_id"] = rfq_creator_user_id
+        if rfq_id is not None:
+            params["rfq_id"] = rfq_id
 
-    def create_quote(self, data):
-        return self._post("/communications/quotes", data)
+        return self._get("/communications/quotes", params=params)
+
+    def create_quote(
+        self,
+        rfq_id=None,
+        yes_bid=None,
+        no_bid=None,
+        rest_remainder=None
+    ):
+        params = {}
+        if rfq_id is not None:
+            params["rfq_id"] = rfq_id
+        if yes_bid is not None:
+            params["yes_bid"] = yes_bid
+        if no_bid is not None:
+            params["no_bid"] = no_bid
+        if rest_remainder is not None:
+            params["rest_remainder"] = rest_remainder
+
+        return self._post("/communications/quotes", params=params)
 
     def get_quote(self, quote_id):
         return self._get(f"/communications/quotes/{quote_id}")
@@ -92,17 +136,52 @@ class KalshiClient:
     def delete_quote(self, quote_id):
         return self._delete(f"/communications/quotes/{quote_id}")
 
-    def accept_quote(self, quote_id):
-        return self._put(f"/communications/quotes/{quote_id}/accept")
+    def accept_quote(self, quote_id, data):
+        return self._put(f"/communications/quotes/{quote_id}/accept", data)
 
     def confirm_quote(self, quote_id):
         return self._put(f"/communications/quotes/{quote_id}/confirm")
 
-    def get_rfqs(self):
-        return self._get("/communications/rfqs")
+    def get_rfqs(
+        self,
+        cursor=None,
+        limit=None,
+        market_ticker=None,
+        event_ticker=None,
+        status=None,
+        creator_user_id=None
+    ):
+        params = {}
+        if cursor is not None:
+            params["cursor"] = cursor
+        if limit is not None:
+            params["limit"] = limit
+        if market_ticker is not None:
+            params["market_ticker"] = market_ticker
+        if event_ticker is not None:
+            params["event_ticker"] = event_ticker
+        if status is not None:
+            params["status"] = status
+        if creator_user_id is not None:
+            params["creator_user_id"] = creator_user_id
+        
+        return self._get("/communications/rfqs", params=params)
 
-    def create_rfq(self, data):
-        return self._post("/communications/rfqs", data)
+    def create_rfq(
+        self,
+        market_ticker=None,
+        contracts=None,
+        rest_remainder=None
+    ):
+        params = {}
+        if market_ticker is not None:
+            params["market_ticker"] = market_ticker
+        if contracts is not None:
+            params["contracts"] = contracts
+        if rest_remainder is not None:
+            params["rest_remainder"] = rest_remainder
+    
+        return self._post("/communications/rfqs", params=params)
 
     def get_rfq(self, rfq_id):
         return self._get(f"/communications/rfqs/{rfq_id}")
@@ -111,26 +190,106 @@ class KalshiClient:
         return self._delete(f"/communications/rfqs/{rfq_id}")
 
     # Market
-    def get_events(self):
-        return self._get("/events")
+    def get_events(
+        self,
+        limit=None,
+        cursor=None,
+        status=None,
+        series_ticker=None,
+        with_nested_markets=None
+    ):
+        params = {}
+        if limit is not None:
+            params["limit"] = limit
+        if cursor is not None:
+            params["cursor"] = cursor
+        if status is not None:
+            params["status"] = status
+        if series_ticker is not None:
+            params["series_ticker"] = series_ticker
+        if with_nested_markets is not None:
+            params["with_nested_markets"] = with_nested_markets
+        
+        return self._get("/events", params=params)
 
-    def get_event(self, event_ticker):
-        return self._get(f"/events/{event_ticker}")
+    def get_event(self, event_ticker, with_nested_markets=None):
+        params = {}
+        if with_nested_markets is not None:
+            params["with_nested_markets"] = with_nested_markets
 
-    def get_markets(self):
-        return self._get("/markets?limit=1000")
+        return self._get(f"/events/{event_ticker}", params=params)
+
+    def get_markets(
+        self,
+        limit=None,
+        cursor=None,
+        event_ticker=None,
+        series_ticker=None,
+        max_close_ts=None,
+        min_close_ts=None,
+        status=None,
+        tickers=None
+    ):
+        params = {}
+        if limit is not None:
+            params["limit"] = limit
+        if cursor is not None:
+            params["cursor"] = cursor
+        if event_ticker is not None:
+            params["event_ticker"] = event_ticker
+        if series_ticker is not None:
+            params["series_ticker"] = series_ticker
+        if max_close_ts is not None:
+            params["max_close_ts"] = max_close_ts
+        if min_close_ts is not None:
+            params["min_close_ts"] = min_close_ts
+        if status is not None:
+            params["status"] = status
+        if tickers is not None:
+            params["tickers"] = tickers
+
+        return self._get("/markets?limit=1000", params=params)
+
+    def get_trades(
+        self,
+        cursor=None,
+        limit=None,
+        ticker=None,
+        min_ts=None,
+        max_ts=None
+    ):
+        params = {}
+        if cursor is not None:
+            params["cursor"] = cursor
+        if limit is not None:
+            params["limit"] = limit
+        if ticker is not None:
+            params["ticker"] = ticker
+        if min_ts is not None:
+            params["min_ts"] = min_ts
+        if max_ts is not None:
+            params["max_ts"] = max_ts
+
+        return self._get("/markets/trades", params=params)
 
     def get_market(self, market_ticker):
         return self._get(f"/markets/{market_ticker}")
 
-    def get_market_orderbook(self, market_ticker):
-        return self._get(f"/markets/{market_ticker}/orderbook")
+    def get_market_orderbook(self, market_ticker, depth=None):
+        params = {}
+        if depth is not None:
+            params["depth"] = depth
 
-    def get_trades(self):
-        return self._get(f"/markets/trades")
+        return self._get(f"/markets/{market_ticker}/orderbook", params=params)
 
-    def get_series_list(self):
-        return self._get("/series/")
+    def get_series_list(self, category=None, include_product_metadata=None):
+        params = {}
+        if category is not None:
+            params["category"] = category
+        if include_product_metadata is not None:
+            params["include_product_metadata"] = include_product_metadata
+
+        return self._get("/series/", params=params)
 
     def get_series(self, series_ticker):
         return self._get(f"/series/{series_ticker}")
@@ -166,15 +325,108 @@ class KalshiClient:
     def get_user_data_timestamp(self):
         return self._get("/exchange/user_data_timestamp")
 
+    # Milestone
+    def get_milestones(
+        self,
+        limit,
+        minimum_start_date=None,
+        category=None,
+        _type=None,
+        related_event_ticker=None,
+        cursor=None
+    ):
+        params = {
+            "limit": limit
+        }
+        if minimum_start_date is not None:
+            params["minimum_start_date"] = minimum_start_date
+        if category is not None:
+            params["category"] = category
+        if _type is not None:
+            params["type"] = _type
+        if related_event_ticker is not None:
+            params["related_event_ticker"] = related_event_ticker
+        if cursor is not None:
+            params["cursor"] = cursor
+
+        return self._get("/milestones/", params=params)
+
+    def get_milestone(self, milestone_id):
+        return self._get(f"/milestones/{milestone_id}")
+
+    '''
+    # Commenting out until we need to use
+
+    # Collections
+    def get_collections(self):
+        return self._get("/multivariate_event_collections/")
+
+    def get_collection(self, collection_id):
+        return self._get(f"/multivariate_event_collections/{collection_id}")
+
+    def create_market_in_collection(self, collection_id):
+        return self._post(f"/multivariate_event_collections/{collection_id}")
+
+    def get_collection_lookup_history(self, collection_id):
+        return self._get(f"/multivariate_event_collections/{collection_id}/lookup")
+
+    def lookup_tickers_in_collection(self, collection_id):
+        return self._put(f"/multivariate_event_collections/{collection_id}/lookup")
+    '''
+
     # Portfolio
     def get_balance(self):
         return self._get("/portfolio/balance")
 
-    def get_fills(self):
-        return self._get("/portfolio/fills")
+    def get_fills(
+        self,
+        ticker=None,
+        min_ts=None,
+        max_ts=None,
+        limit=None,
+        cursor=None,
+    ):
+        params = {}
+        if ticker is not None:
+            params["ticker"] = ticker
+        if min_ts is not None:
+            params["min_ts"] = min_ts
+        if max_ts is not None:
+            params["max_ts"] = max_ts
+        if limit is not None:
+            params["limit"] = limit
+        if cursor is not None:
+            params["cursor"] = cursor
 
-    def get_orders(self):
-        return self._get("/portfolio/orders")
+        return self._get("/portfolio/fills", params=params)
+
+    def get_orders(
+        self,
+        ticker=None,
+        event_ticker=None,
+        min_ts=None,
+        max_ts=None,
+        status=None,
+        cursor=None,
+        limit=None,
+    ):
+        params = {}
+        if ticker is not None:
+            params["ticker"] = ticker
+        if event_ticker is not None:
+            params["event_ticker"] = event_ticker
+        if min_ts is not None:
+            params["min_ts"] = min_ts
+        if max_ts is not None:
+            params["max_ts"] = max_ts
+        if status is not None:
+            params["status"] = status
+        if cursor is not None:
+            params["cursor"] = cursor
+        if limit is not None:
+            params["limit"] = limit
+
+        return self._get("/portfolio/orders", params=params)
 
     def create_order(self, data):
         return self._post("/portfolio/orders", data)
@@ -197,38 +449,53 @@ class KalshiClient:
     def decrease_order(self, order_id, data):
         return self._post(f"/portfolio/orders/{order_id}/decrease", data)
 
-    def get_positions(self):
-        return self._get("/portfolio/positions")
+    def get_positions(
+        self,
+        cursor=None,
+        limit=None,
+        count_filter=None,
+        settlement_status=None,
+        ticker=None,
+        event_ticker=None,
+    ):
+        params = {}
+        if cursor is not None:
+            params["cursor"] = cursor
+        if limit is not None:
+            params["limit"] = limit
+        if count_filter is not None:
+            params["count_filter"] = count_filter
+        if settlement_status is not None:
+            params["settlement_status"] = settlement_status
+        if ticker is not None:
+            params["ticker"] = ticker
+        if event_ticker is not None:
+            params["event_ticker"] = event_ticker
+    
+        return self._get("/portfolio/positions", params=params)
 
-    def get_settlements(self):
-        return self._get("/portfolio/settlements")
+    def get_portfolio_settlements(
+        self,
+        limit=None,
+        min_ts=None,
+        max_ts=None,
+        cursor=None
+    ):
+        params = {}
+        if limit is not None:
+            params["limit"] = limit
+        if min_ts is not None:
+            params["min_ts"] = min_ts
+        if max_ts is not None:
+            params["max_ts"] = max_ts
+        if cursor is not None:
+            params["cursor"] = cursor
 
-    def get_resting_order_total_value(self):
+        return self._get("/portfolio/settlements", params=params)
+
+    def get_portfolio_resting_order_total_value(self):
         return self._get("/portfolio/summary/resting_order_total_value")
 
-    # Milestone
-    def get_milestones(self):
-        return self._get("/milestones/")
-
-    def get_milestone(self, milestone_id):
-        return self._get(f"/milestones/{milestone_id}")
-
-    # Collections
-    def get_collections(self):
-        return self._get("/multivariate_event_collections/")
-
-    def get_collection(self, collection_id):
-        return self._get(f"/multivariate_event_collections/{collection_id}")
-
-    def create_market_in_collection(self, collection_id):
-        return self._post(f"/multivariate_event_collections/{collection_id}")
-
-    def get_collection_lookup_history(self, collection_id):
-        return self._get(f"/multivariate_event_collections/{collection_id}/lookup")
-
-    def lookup_tickers_in_collection(self, collection_id):
-        return self._put(f"/multivariate_event_collections/{collection_id}/lookup")
-
     # Structured Target
-    def get_structured_target(self, target_id):
-        return self._get(f"/structured_targets/{target_id}")
+    def get_structured_target(self, structured_target_id):
+        return self._get(f"/structured_targets/{structured_target_id}")
