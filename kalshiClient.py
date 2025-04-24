@@ -13,10 +13,14 @@ class KalshiClient:
         self,
         key_id,
         private_key_path,
-        base_url="https://api.elections.kalshi.com/trade-api/v2",
+        env="test",
     ):
+        if env == "prod":
+            self.base_url = "https://api.elections.kalshi.com/trade-api/v2"
+        else:
+            self.base_url = "https://demo-api.kalshi.co/trade-api/v2"
+
         self.key_id = key_id
-        self.base_url = base_url
         self.session = requests.Session()
 
         with open(private_key_path, "rb") as key_file:
@@ -27,7 +31,7 @@ class KalshiClient:
     def _generate_headers(self, method, path):
         timestamp = utils.get_curr_time_milliseconds()
         timestamp_str = str(timestamp)
-        payload = f"{timestamp_str}.{method.upper()}.{path}".encode("utf-8")
+        payload = f"{timestamp_str}{method.upper()}{path}".encode("utf-8")
         try:
             signature = self.private_key.sign(
                 payload,
@@ -50,7 +54,7 @@ class KalshiClient:
     def _request(self, method, endpoint, params=None, data=None):
         path = endpoint if endpoint.startswith("/") else "/" + endpoint
         url = f"{self.base_url}{path}"
-        headers = self._generate_headers(method, path)
+        headers = self._generate_headers(method, "/trade-api/v2" + path)
         response = self.session.request(
             method=method.upper(),
             url=url, headers=headers,
@@ -471,7 +475,7 @@ class KalshiClient:
             params["ticker"] = ticker
         if event_ticker is not None:
             params["event_ticker"] = event_ticker
-    
+   
         return self._get("/portfolio/positions", params=params)
 
     def get_portfolio_settlements(
