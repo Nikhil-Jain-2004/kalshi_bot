@@ -4,6 +4,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
+import utils
 import datetime
 
 
@@ -24,14 +25,9 @@ class KalshiClient:
             )
 
     def _generate_headers(self, method, path):
-        # Get the current time
-        current_time = datetime.datetime.now()
-        # Convert the time to a timestamp (seconds since the epoch)
-        timestamp = current_time.timestamp()
-        # Convert the timestamp to milliseconds
-        current_time_milliseconds = int(timestamp * 1000)
-        timestampt_str = str(current_time_milliseconds)
-        payload = f"{timestampt_str}.{method.upper()}.{path}".encode("utf-8")
+        timestamp = utils.get_curr_time_milliseconds()
+        timestamp_str = str(timestamp)
+        payload = f"{timestamp_str}.{method.upper()}.{path}".encode("utf-8")
         try:
             signature = self.private_key.sign(
                 payload,
@@ -48,7 +44,7 @@ class KalshiClient:
         return {
             "KALSHI-ACCESS-KEY": self.key_id,
             "KALSHI-ACCESS-SIGNATURE": signature,
-            "KALSHI-ACCESS-TIMESTAMP": timestampt_str,
+            "KALSHI-ACCESS-TIMESTAMP": timestamp_str,
         }
 
     def _request(self, method, endpoint, params=None, data=None):
@@ -122,7 +118,7 @@ class KalshiClient:
         return self._get(f"/events/{event_ticker}")
 
     def get_markets(self):
-        return self._get("/markets")
+        return self._get("/markets?limit=1000")
 
     def get_market(self, market_ticker):
         return self._get(f"/markets/{market_ticker}")
@@ -139,9 +135,22 @@ class KalshiClient:
     def get_series(self, series_ticker):
         return self._get(f"/series/{series_ticker}")
 
-    def get_market_candlesticks(self, series_ticker, market_ticker):
+    def get_market_candlesticks(
+        self,
+        series_ticker,
+        market_ticker,
+        start_ts: datetime.datetime,
+        end_ts: datetime.datetime,
+        period_interval: str
+    ):
+        params = {
+            "start_ts": utils.get_seconds_since_epoch(start_ts),
+            "end_ts": utils.get_seconds_since_epoch(end_ts),
+            "period_interval": utils.get_period_interval(period_interval)
+        }
         return self._get(
-            f"/series/{series_ticker}/markets/{market_ticker}/candlesticks?&start_ts=1745298193&end_ts=1745299194&period_interval=1"
+            f"/series/{series_ticker}/markets/{market_ticker}/candlesticks",
+            params=params
         )
 
     # Exchange

@@ -1,4 +1,4 @@
-secrets.py
+kalshi_secrets.py
 *.key
 
 # Byte-compiled / optimized / DLL files
